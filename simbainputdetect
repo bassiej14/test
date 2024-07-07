@@ -1,0 +1,183 @@
+{$DEFINE SRL_DISABLE_REMOTEINPUT}
+
+{$I SRL-T/osr.simba}
+{$I WaspLib/osr.simba}
+{$DEFINE SRL_KEYBOARD_INCLUDED}
+
+const
+  Keys: array[0..6] of Integer = [112, 113, 114, 116, 117, 120, 121];
+
+var
+  KeyPressed: array[0..6] of Boolean;
+  i: Integer;
+  disable: boolean;
+  slots: TintegerArray;
+  mousepos: Tpoint;
+
+function TRSInventory.Consume(consumableType: ERSConsumable; out slots: TIntegerArray): Boolean; Override;
+var
+  consumableHandler, tmp: PConsumableHandler;
+  foundConsumables: TRSConsumableArray;
+  startingPoints: Int32;
+  trashSlots: TIntegerArray;
+begin
+  consumableHandler := TConsumableHandler.GetHandler(consumableType);
+  if not consumableHandler^.IsSetup then
+    Exit;
+
+  case consumableType of
+    ERSConsumable.FOOD:
+      startingPoints := Minimap.GetHPLevel();
+
+    ERSConsumable.PRAYER:
+      startingPoints := Minimap.GetPrayerLevel();
+
+    ERSConsumable.ENERGY:
+      startingPoints := Minimap.GetRunEnergy();
+  end;
+
+  slots := Self.FindConsumable(consumableType, foundConsumables);
+
+  if slots.Len() = 0 then
+    Exit;
+
+  if not Antiban.BioDice(EBioBehavior.CONSUME_IN_BANK) and
+     RSInterface.IsOpen() then
+     RSInterface.Close();
+
+  if (consumableHandler^.Delay.Length > 0) then
+    while not consumableHandler^.Delay.IsFinished() do
+      Wait(50, 100);
+
+  Result := Self.ClickSlot(slots[0]);
+
+  if Result then
+    case consumableType of
+      ERSConsumable.FOOD:
+        Result := WaitUntil(startingPoints < Minimap.GetHPLevel(), 100, 3000);
+
+      ERSConsumable.PRAYER:
+        Result := WaitUntil(startingPoints < Minimap.GetPrayerLevel(), 100, 3000);
+
+      ERSConsumable.ENERGY:
+        Result := WaitUntil(startingPoints < Minimap.GetRunEnergy(), 100, 3000);
+      else
+        Antiban.BioWait(1000, 2000, wdLeft);
+    end;
+
+  if Result then
+  begin
+    case consumableType of
+      ERSConsumable.FOOD:
+        begin
+          if foundConsumables[0].Item = 'Cooked karambwan' then
+            consumableHandler^.Delay.Init(1200)
+          else
+            consumableHandler^.Delay.Init(1800);
+        end;
+      else
+        for tmp in CONSUMABLE_HANDLER_ARRAY do
+            tmp^.Delay.Init(600);
+    end;
+
+    if foundConsumables[0].Timer > 0 then
+    begin
+      if consumableHandler^.Timer.Length <> foundConsumables[0].Timer then
+        consumableHandler^.Timer.Setup(foundConsumables[0].Timer);
+
+      if consumableType = ERSConsumable.ANTI_FIRE then
+        consumableHandler^.Timer.Restart(Random(-50000, -20000))
+      else
+        consumableHandler^.Timer.Restart(Random(-3000, 3000));
+    end;
+
+    TotalConsumableCost += foundConsumables[0].Cost;
+
+    if Self.FindItems(TRASH_ARRAY, trashSlots) then
+    begin
+      if Bank.IsOpen() then
+        Bank.DepositSlot([trashSlots[0], -1], False)
+      else
+        Self.ShiftDrop(trashSlots.Intersection(Self.RandomPattern()));
+
+      slots := slots.Difference(trashSlots); //Delete trashSlots from slots.
+    end;
+  end;
+end;
+
+
+
+begin
+  mouse.Wind := 0;
+  mouse.Gravity := 20;
+  mouse.Speed := 120;
+  mouse.CanIdle := false;
+  mouse.MissChance := 0;
+
+
+  repeat
+    for i := 0 to High(Keys) do
+    begin
+      if System.IsKeyDown(Keys[i]) and not KeyPressed[i] then
+      begin
+        if(Tostr(Keys[i]) = '121') then
+        begin
+           disable := not(disable);
+        end;
+        if(not(disable)) and (Tostr(Keys[i]) = '112') then
+        begin
+           mousepos := mouse.Position;
+           prayer.Open();
+           prayer.ActivatePrayer([ERSPrayer.PROTECT_FROM_MAGIC, ERSPrayer.PIETY]);
+           mouse.Move(mousepos, 1, true);
+        end
+        else if(not(disable)) and (Tostr(Keys[i]) = '113') then
+        begin
+           mousepos := mouse.Position;
+           prayer.Open();
+           prayer.ActivatePrayer([ERSPrayer.PROTECT_FROM_MISSILES, ERSPrayer.PIETY]);
+           mouse.Move(mousepos, 1, true);
+        end
+        else if(not(disable)) and (Tostr(Keys[i]) = '114') then
+        begin
+           mousepos := mouse.Position;
+           prayer.Open();
+           prayer.ActivatePrayer([ERSPrayer.PROTECT_FROM_MELEE, ERSPrayer.PIETY]);
+           mouse.Move(mousepos, 1, true);
+        end
+        else if(not(disable)) and (Tostr(Keys[i]) = '116') then
+        begin
+           mousepos := mouse.Position;
+           inventory.consume(ERSConsumable.PRAYER);
+           wait(300);
+           mouse.Move(mousepos, 1, true);
+        end
+        else if(not(disable)) and (Tostr(Keys[i]) = '117') then
+        begin
+           mousepos := mouse.Position;
+           slots := [];
+           inventory.FindItem('Shark', slots);
+           inventory.ClickSlot(slots[0]);
+           wait(300);
+           mouse.Move(mousepos, 1, true);
+        end
+        else if(not(disable)) and (Tostr(Keys[i]) = '120') then
+        begin
+           mousepos := mouse.Position;
+           minimap.EnablePrayer();
+           wait(50, 100);
+           minimap.DisablePrayer();
+           mouse.Move(mousepos, 1, true);
+        end;
+
+
+
+
+        writeln(Tostr(Keys[i]), ' pressed');
+        KeyPressed[i] := True; // Mark as handled
+      end
+      else if not System.IsKeyDown(Keys[i]) then
+        KeyPressed[i] := False; // Reset flag when key is released
+    end;
+  until false;
+end.
