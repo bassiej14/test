@@ -179,8 +179,9 @@ begin
                    end;
             116: ConsumeItem(ERSConsumable.PRAYER);
             117: begin
-                      EatFood(Food);
-                      if ComboFood <> '' then
+                      if inventory.ContainsItem(Food) then
+                        EatFood(Food);
+                      if (ComboFood <> '') and inventory.ContainsItem(ComboFood) then
                         EatFood(ComboFood);
                     end;
             118: CastSpell(Thrall);
