@@ -80,7 +80,6 @@ var
 begin
   MousePos := Mouse.Position;
   Inventory.Consume(ConsumableType, Slots);
-  Wait(300);
   Mouse.Move(MousePos, 1, True);
 end;
 
@@ -163,18 +162,40 @@ begin
             116: ConsumeItem(ERSConsumable.PRAYER);
             117: EatFood(Food);
             118:
+              begin
+              MousePos1 := Mouse.Position;
               if Inventory.ContainsConsumable(ERSConsumable.BOOST) then
-                ConsumeItem(ERSConsumable.BOOST)
-              else if Inventory.ContainsConsumable(ERSConsumable.MAGIC_BOOST) then
-                ConsumeItem(ERSConsumable.MAGIC_BOOST)
-              else if Inventory.ContainsConsumable(ERSConsumable.ATTACK_BOOST) then
-                ConsumeItem(ERSConsumable.ATTACK_BOOST)
-              else if Inventory.ContainsConsumable(ERSConsumable.RANGING_BOOST) then
-                ConsumeItem(ERSConsumable.RANGING_BOOST)
-              else if Inventory.ContainsConsumable(ERSConsumable.DEFENCE_BOOST) then
-                ConsumeItem(ERSConsumable.DEFENCE_BOOST)
-              else if Inventory.ContainsConsumable(ERSConsumable.STRENGTH_BOOST) then
+              begin
+                ConsumeItem(ERSConsumable.BOOST);
+                wait(400);
+              end;
+              if Inventory.ContainsConsumable(ERSConsumable.MAGIC_BOOST) then
+              begin
+                ConsumeItem(ERSConsumable.MAGIC_BOOST);
+                wait(400);
+              end;
+              if Inventory.ContainsConsumable(ERSConsumable.ATTACK_BOOST) then
+              begin
+                ConsumeItem(ERSConsumable.ATTACK_BOOST);
+                wait(400);
+              end;
+              if Inventory.ContainsConsumable(ERSConsumable.RANGING_BOOST) then
+              begin
+                ConsumeItem(ERSConsumable.RANGING_BOOST);
+                wait(400);
+              end;
+              if Inventory.ContainsConsumable(ERSConsumable.DEFENCE_BOOST) then
+              begin
+                ConsumeItem(ERSConsumable.DEFENCE_BOOST);
+                wait(400);
+              end;
+              if Inventory.ContainsConsumable(ERSConsumable.STRENGTH_BOOST) then
+              begin
                 ConsumeItem(ERSConsumable.STRENGTH_BOOST);
+                wait(400);
+              end;
+              Mouse.Move(MousePos1, 1, True);
+              end;
             119:
               begin
                 Mouse.Speed := 230;
@@ -199,9 +220,11 @@ begin
               end;
             120:
               begin
+                MousePos1 := Mouse.Position;
                 Minimap.EnablePrayer();
                 Wait(50, 100);
                 Minimap.DisablePrayer();
+                Mouse.Move(MousePos1, 1, True);
               end;
           end;
         end;
