@@ -135,15 +135,15 @@ begin
 end;
 
 begin
-  if not RSClient.IsLoggedIn then
-    Login.LoginPlayer;
+
 
   Mouse.Wind := 0;
   Mouse.Gravity := 20;
   Mouse.Speed := 150;
   Mouse.CanIdle := False;
   Mouse.MissChance := 0;
-
+  if not RSClient.IsLoggedIn then
+    Login.LoginPlayer;
   EquipGear1 := True;
   prayerRestore := Random(15, 25);
 
