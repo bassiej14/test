@@ -3,16 +3,21 @@
 {$I WaspLib/osr.simba}
 {$DEFINE SRL_KEYBOARD_INCLUDED}
 
+begin
+  Login.PlayerIndex := 0;
+end;
+
+
 const
   Food := 'Dark crab';
   //ComboFood := 'Karambwan';
-  BuffPrayer1 := ERSPrayer.PIETY;
-  BuffPrayer2 := ERSPrayer.RIGOUR;
+  BuffPrayer2 := ERSPrayer.PIETY;
+  BuffPrayer1 := ERSPrayer.RIGOUR;
 //  Thrall := ERSSpell.RESURRECT_GREATER_ZOMBIE;  //ERSSpell.RESURRECT_GREATER_GHOST;  //ERSSpell.RESURRECT_SUPERIOR_ZOMBIE;
   Thrall := ERSSpell.NPC_CONTACT;  //ERSSpell.RESURRECT_GREATER_GHOST;  //ERSSpell.RESURRECT_SUPERIOR_ZOMBIE;
-  Gear1:= ['ava''s assembler', 'Necklace of anguish', 'Crystal helm', 'Crystal body', 'Crystal legs', 'Bow of faerdhinen (c)'];
-  Gear2:= ['Bandos tassets', 'Arclight', 'Bandos chestplate', 'Fire cape (l)', 'Amulet of torture', 'Dragon defender', 'Neitiznot faceguard'];
-
+  Gear1:= ['Ancient d''hide boots', 'Archers ring (i)','ava''s assembler', 'Necklace of anguish', 'Masori chaps (f)', 'Masori body (f)', 'Toxic blowpipe'];
+  Gear2:= ['Dragon boots', 'Emberlight' , 'Bandos tassets', 'Bandos chestplate', 'Fire cape (l)', 'Amulet of torture', 'Dragon defender', 'Neitiznot faceguard', 'Berserker ring (i)'];
+                                            //
   //Gear2:= ['Nightmare staff', 'Virtus mask', 'Virtus robe top', 'Virtus robe bottom', 'Occult necklace', 'Tormented bracelet', 'Eternal boots', 'Imbued saradomin cape', 'Seers ring (i)', 'Book of darkness'];
 
 var
@@ -21,7 +26,7 @@ var
   i,prayerRestore: Integer;
   Disable, SwitchBuffPrayer, EquipGear1: Boolean;
   Slots: TIntegerArray;
-  MousePos: TPoint;
+  MousePos1: TPoint;
 
 function TRSInventory.Consume(consumableType: ERSConsumable; out Slots: TIntegerArray): Boolean; Override;
 var
@@ -105,16 +110,35 @@ begin
     end;
   end;
 end;
-
+function TRSGameTabs.Open(Tab: ERSGameTab): Boolean; override;
+var
+  i: Int32;
+begin
+  if Self.GetCurrentTab() = Tab then
+    Exit(True);
+  mouse.move(GetTabBox(Tab));
+  Mouse.Click(MOUSE_LEFT);
+  waituntil(Self.GetCurrentTab() = Tab, 50, 1000);
+end;
 procedure TogglePrayer(Prayers: array of ERSPrayer);
+var
+  MousePos: TPoint;
 begin
   MousePos := Mouse.Position;
-  Prayer.Open();
-  Prayer.ActivatePrayer(Prayers);
+  GameTabs.Open(ERSGameTab.PRAYER);
+  for i := 0 to High(prayers) do
+  begin
+    if not prayer.IsPrayerActive(prayers[i]) then
+      Mouse.Click(prayer.GetPrayerBox(prayers[i]), MOUSE_LEFT);
+  end;
+
+  WaitUntil(prayer.AllPrayerActive(prayers), 100, 2000);
   Mouse.Move(MousePos, 1, True);
 end;
 
 procedure ConsumeItem(ConsumableType: ERSConsumable);
+var
+  MousePos: TPoint;
 begin
   MousePos := Mouse.Position;
   Inventory.Consume(ConsumableType, Slots);
@@ -123,6 +147,8 @@ begin
 end;
 
 procedure EatFood(FoodName: String);
+var
+  MousePos: TPoint;
 begin
   MousePos := Mouse.Position;
   Slots := [];
@@ -148,28 +174,47 @@ var
   i: Integer;
   x: Integer;
   itemids: TRSItemArray;
+  slots11: TIntegerArray;
 begin
   for i := 0 to High(Gear) do
   begin
-    WHILE INVENTORY.ContainsItem(GEAR[I]) do
+    itemids := Itemfinder.GetItemIDs(Gear[i]);
+    for x := 0 to High(itemids) do
     begin
-      itemids := Itemfinder.GetItemIDs(Gear[i]);
+      if INVENTORY.MouseItem(ITEMIDS[X]) then
+        Mouse.Click(MOUSE_LEFT);
+    end;
+    wait(10);
+    if inventory.ContainsItem(Gear[i]) then
+    begin
+      writeln(gear[i]);
+      inventory.FindItem(gear[i], slots11);
+      writeln(slots11);
+
+      wait(100);
+      if inventory.ContainsItem(Gear[i]) then
+      begin
       for x := 0 to High(itemids) do
       begin
         if INVENTORY.MouseItem(ITEMIDS[X]) then
           Mouse.Click(MOUSE_LEFT);
+        end;
       end;
-      wait(10);
     end;
+
   end;
 end;
 
 begin
+  if not RSClient.IsLoggedIn then
+    Login.LoginPlayer;
+
   Mouse.Wind := 0;
   Mouse.Gravity := 20;
-  Mouse.Speed := 170;
+  Mouse.Speed := 150;
   Mouse.CanIdle := False;
   Mouse.MissChance := 0;
+
   EquipGear1 := True;
   prayerRestore := random(15, 25);
   repeat
@@ -180,15 +225,16 @@ begin
         if not Disable then
         begin
           case Keys[i] of
-            112: TogglePrayer([ERSPrayer.PROTECT_FROM_MAGIC]);
+            112: begin
+                  TogglePrayer([ERSPrayer.PROTECT_FROM_MAGIC]);
+                 end;
             113: TogglePrayer([ERSPrayer.PROTECT_FROM_MISSILES]);
             114: TogglePrayer([ERSPrayer.PROTECT_FROM_MELEE]);
             115: begin
-                     if SwitchBuffPrayer then
+                     if EquipGear1 then
                        TogglePrayer([BuffPrayer2])
                      else
                        TogglePrayer([BuffPrayer1]);
-                     SwitchBuffPrayer := not SwitchBuffPrayer;
                    end;
             116: ConsumeItem(ERSConsumable.PRAYER);
             117: begin
@@ -224,25 +270,25 @@ begin
 
                  end;
             119: begin
-                    MousePos := Mouse.Position;
+                    Mouse.Speed := 230;
+                    MousePos1 := Mouse.Position;
                     if EquipGear1 then
                     BEGIN
                        INVENTORY.Open();
                        EquipGear(Gear2);
-                       WAIT(100);
-                       WRITELN("SWITCHING PRAYER");
-                       TogglePrayer([BuffPrayer1]);
+                       WAIT(10);
+                       TogglePrayer([BuffPrayer2]);
                     END
                     else
                     BEGIN
                        INVENTORY.Open();
                        EquipGear(Gear1);
-                       WAIT(100);
-                       WRITELN("SWITCHING PRAYER");
-                       TogglePrayer([BuffPrayer2]);
+                       WAIT(10);
+                       TogglePrayer([BuffPrayer1]);
                     END;
                     EquipGear1 := not EquipGear1;
-                    Mouse.Move(MousePos, 1, True);
+                    Mouse.Move(MousePos1, 1, True);
+                    Mouse.Speed := 150;
                  end;
             120: begin
                      Minimap.EnablePrayer();
