@@ -56,7 +56,14 @@ begin
     Exit(True);
   Mouse.Move(GetTabBox(Tab));
   Mouse.Click(MOUSE_LEFT);
-  Result := WaitUntil(Self.GetCurrentTab() = Tab, 50, 1000);
+  WaitUntil(Self.GetCurrentTab() = Tab, 50, 400);
+  if not(Self.GetCurrentTab() = Tab) then
+  begin
+    Mouse.Click(MOUSE_LEFT);
+    WaitUntil(Self.GetCurrentTab() = Tab, 50, 3000);
+  end;
+
+  Result := (Self.GetCurrentTab() = Tab);
 end;
 
 procedure TogglePrayer(Prayers: array of ERSPrayer);
@@ -66,20 +73,22 @@ var
 begin
   MousePos := Mouse.Position;
   GameTabs.Open(ERSGameTab.PRAYER);
+  writeln(prayer.IsOpen());
+  if not prayer.IsOpen() then
+  begin
+     while not prayer.IsOpen() do
+     begin
+         prayer.Open();
+         if not prayer.IsOpen() then
+            wait(1000);
+     end;
+  end;
+
   for i := 0 to High(Prayers) do
     if not Prayer.IsPrayerActive(Prayers[i]) then
       Mouse.Click(Prayer.GetPrayerBox(Prayers[i]), MOUSE_LEFT);
 
   WaitUntil(Prayer.AllPrayerActive(Prayers), 100, 2000);
-  Mouse.Move(MousePos, 1, True);
-end;
-
-procedure ConsumeItem(ConsumableType: ERSConsumable);
-var
-  MousePos: TPoint;
-begin
-  MousePos := Mouse.Position;
-  Inventory.Consume(ConsumableType, Slots);
   Mouse.Move(MousePos, 1, True);
 end;
 
@@ -92,7 +101,6 @@ begin
   Inventory.FindItem(FoodName, Slots);
   if Slots.Len() > 0 then
     Inventory.ClickSlot(Slots[0]);
-  Wait(300);
   Mouse.Move(MousePos, 1, True);
 end;
 
@@ -106,12 +114,29 @@ begin
   Magic.CastSpell(Spell);
 end;
 
+function ShuffleArray(var arr: array of String): array of string;
+var
+  i, j: Integer;
+  temp: String;
+begin
+  for i := High(arr) downto 1 do
+  begin
+    j := Random(i + 1);
+    temp := arr[i];
+    arr[i] := arr[j];
+    arr[j] := temp;
+  end;
+end;
+
 procedure EquipGear(Gear: array of String);
 var
   i, x: Integer;
   itemIDs: TRSItemArray;
   slots11: TIntegerArray;
+  tempgear: array of String;
 begin
+  tempgear := ShuffleArray(Gear);
+
   for i := 0 to High(Gear) do
   begin
     itemIDs := ItemFinder.GetItemIDs(Gear[i]);
@@ -158,41 +183,45 @@ begin
             112: TogglePrayer([ERSPrayer.PROTECT_FROM_MAGIC]);
             113: TogglePrayer([ERSPrayer.PROTECT_FROM_MISSILES]);
             114: TogglePrayer([ERSPrayer.PROTECT_FROM_MELEE]);
-            115: if EquipGear1 then TogglePrayer([BuffPrayer2]) else TogglePrayer([BuffPrayer1]);
-            116: ConsumeItem(ERSConsumable.PRAYER);
+            115: if EquipGear1 then TogglePrayer([BuffPrayer1]) else TogglePrayer([BuffPrayer2]);
+            116: begin
+                   MousePos1 := Mouse.Position;
+                   Inventory.Consume(ERSConsumable.PRAYER, Slots);
+                   Mouse.Move(MousePos1, 1, True);
+                 end;
             117: EatFood(Food);
             118:
               begin
               MousePos1 := Mouse.Position;
               if Inventory.ContainsConsumable(ERSConsumable.BOOST) then
               begin
-                ConsumeItem(ERSConsumable.BOOST);
-                wait(400);
+                Inventory.Consume(ERSConsumable.BOOST);
+                wait(1800);
               end;
               if Inventory.ContainsConsumable(ERSConsumable.MAGIC_BOOST) then
               begin
-                ConsumeItem(ERSConsumable.MAGIC_BOOST);
-                wait(400);
+                Inventory.Consume(ERSConsumable.MAGIC_BOOST);
+                wait(1800);
               end;
               if Inventory.ContainsConsumable(ERSConsumable.ATTACK_BOOST) then
               begin
-                ConsumeItem(ERSConsumable.ATTACK_BOOST);
-                wait(400);
+                Inventory.Consume(ERSConsumable.ATTACK_BOOST);
+                wait(1800);
               end;
               if Inventory.ContainsConsumable(ERSConsumable.RANGING_BOOST) then
               begin
-                ConsumeItem(ERSConsumable.RANGING_BOOST);
-                wait(400);
+                Inventory.Consume(ERSConsumable.RANGING_BOOST);
+                wait(1800);
               end;
               if Inventory.ContainsConsumable(ERSConsumable.DEFENCE_BOOST) then
               begin
-                ConsumeItem(ERSConsumable.DEFENCE_BOOST);
-                wait(400);
+                Inventory.Consume(ERSConsumable.DEFENCE_BOOST);
+                wait(1800);
               end;
               if Inventory.ContainsConsumable(ERSConsumable.STRENGTH_BOOST) then
               begin
-                ConsumeItem(ERSConsumable.STRENGTH_BOOST);
-                wait(400);
+                Inventory.Consume(ERSConsumable.STRENGTH_BOOST);
+                wait(1800);
               end;
               Mouse.Move(MousePos1, 1, True);
               end;
