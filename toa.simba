@@ -1,0 +1,282 @@
+{$DEFINE SRL_DISABLE_REMOTEINPUT}
+{$I SRL-T/osr.simba}
+{$I WaspLib/osr.simba}
+{$DEFINE SRL_KEYBOARD_INCLUDED}
+
+begin
+  Login.PlayerIndex := 0;
+end;
+
+const
+  Food = 'Shark';
+  Thrall = ERSSpell.RESURRECT_GREATER_SKELETON;
+  BuffPrayer1 = ERSPrayer.PIETY;
+  BuffPrayer2 = ERSPrayer.RIGOUR;
+  BuffPrayer3 = ERSPrayer.AUGURY;
+  Gear1 = ['Ancient d' 'hide boots', 'Archers ring (i)', 'ava' 's assembler', 'Necklace of anguish', 'Masori chaps (f)', 'Masori body (f)', 'Toxic blowpipe'];
+  Gear2 = ['Dragon boots', 'Emberlight', 'Bandos tassets', 'Bandos chestplate', 'Fire cape (l)', 'Amulet of torture', 'Dragon defender', 'Neitiznot faceguard', 'Berserker ring (i)'];
+  Gear3 = ['Ancient d' 'hide boots', 'Archers ring (i)', 'ava' 's assembler', 'Necklace of anguish', 'Masori chaps (f)', 'Masori body (f)', 'Toxic blowpipe'];
+
+var
+  Keys: array [0 .. 10] of Integer = [112, 113, 114, 115, 116, 117, 118, 119, 120, 122, 123];
+  KeyPressed: array [0 .. 10] of Boolean;
+  i, prayerRestore: Integer;
+  Disable, SwitchBuffPrayer, EquipGear1: Boolean;
+  Slots: TIntegerArray;
+  MousePos1: TPoint;
+
+function TRSInventory.Consume(consumableType: ERSConsumable; out Slots: TIntegerArray): Boolean; override;
+var
+  ConsumableHandler, Tmp: PConsumableHandler;
+  FoundConsumables: TRSConsumableArray;
+  StartingPoints: Int32;
+  TrashSlots: TIntegerArray;
+begin
+  ConsumableHandler := TConsumableHandler.GetHandler(consumableType);
+  if not ConsumableHandler ^.IsSetup then
+    Exit(False);
+  Slots := Self.FindConsumable(consumableType, FoundConsumables);
+  if Slots.Len() = 0 then
+    Exit(False);
+  Result := Self.ClickSlot(Slots[0]);
+  if Result then
+    case consumableType of
+      ERSConsumable.FOOD: Result := WaitUntil(StartingPoints < Minimap.GetHPLevel(), 100, 3000);
+      ERSConsumable.PRAYER: Result := WaitUntil(StartingPoints < Minimap.GetPrayerLevel(), 100, 3000);
+      ERSConsumable.ENERGY: Result := WaitUntil(StartingPoints < Minimap.GetRunEnergy(), 100, 3000);
+    end;
+end;
+
+function TRSGameTabs.Open(Tab: ERSGameTab): Boolean; override;
+begin
+  if Self.GetCurrentTab() = Tab then
+    Exit(True);
+  Mouse.Move(GetTabBox(Tab));
+  Mouse.Click(MOUSE_LEFT);
+  WaitUntil(Self.GetCurrentTab() = Tab, 50, 400);
+  if not (Self.GetCurrentTab() = Tab) then
+  begin
+    Mouse.Click(MOUSE_LEFT);
+    WaitUntil(Self.GetCurrentTab() = Tab, 50, 3000);
+  end;
+  Result := (Self.GetCurrentTab() = Tab);
+end;
+
+procedure TogglePrayer(Prayers: array of ERSPrayer);
+var
+  MousePos: TPoint;
+  i: Integer;
+begin
+  MousePos := Mouse.Position;
+  GameTabs.Open(ERSGameTab.PRAYER);
+  writeln(prayer.IsOpen());
+  if not prayer.IsOpen() then
+  begin
+    while not prayer.IsOpen() do
+    begin
+      prayer.Open();
+      if not prayer.IsOpen() then
+        wait(1000);
+    end;
+  end;
+  for i := 0 to High(Prayers) do
+    if not Prayer.IsPrayerActive(Prayers[i]) then
+      Mouse.Click(Prayer.GetPrayerBox(Prayers[i]), MOUSE_LEFT);
+  WaitUntil(Prayer.AllPrayerActive(Prayers), 100, 2000);
+  Mouse.Move(MousePos, 1, True);
+end;
+
+procedure EatFood(FoodName: String);
+var
+  MousePos: TPoint;
+begin
+  MousePos := Mouse.Position;
+  Slots := [];
+  Inventory.FindItem(FoodName, Slots);
+  if Slots.Len() > 0 then
+    Inventory.ClickSlot(Slots[0]);
+  Mouse.Move(MousePos, 1, True);
+end;
+
+procedure ToggleDisable();
+begin
+  Disable := not Disable;
+end;
+
+procedure CastSpell(Spell: ERSSpell);
+begin
+  Magic.CastSpell(Spell);
+end;
+
+function ShuffleArray(var arr: array of String): array of string;
+var
+  i, j: Integer;
+  temp: String;
+begin
+  for i := High(arr) downto 1 do
+  begin
+    j := Random(i + 1);
+    temp := arr[i];
+    arr[i] := arr[j];
+    arr[j] := temp;
+  end;
+end;
+
+procedure EquipGear(Gear: array of String);
+var
+  i, x: Integer;
+  itemIDs: TRSItemArray;
+  slots11: TIntegerArray;
+  tempgear: array of String;
+begin
+  tempgear := ShuffleArray(Gear);
+  for i := 0 to High(Gear) do
+  begin
+    writeln(gear[i]);
+    writeln(Inventory.ContainsItem(Gear[i]));
+    itemIDs := ItemFinder.GetItemIDs(Gear[i]);
+    for x := 0 to High(itemIDs) do
+    begin
+      writeln(inventory.ContainsItem(itemIDs[x]));
+      if Inventory.MouseItem(itemIDs[x]) then
+        Mouse.Click(MOUSE_LEFT);
+    end;
+    Wait(50);
+    writeln(Inventory.ContainsItem(Gear[i]));
+    if Inventory.ContainsItem(Gear[i]) then
+    begin
+      writeln('finditem');
+      Inventory.FindItem(Gear[i], slots11);
+      Wait(100);
+      if Inventory.ContainsItem(Gear[i]) then
+      begin
+        Inventory.MouseItem(slots11[0]);
+        Mouse.Click(MOUSE_LEFT);
+        waituntil(not (Inventory.ContainsItem(Gear[i])), 100, 1000);
+      end;
+    end;
+  end;
+end;
+
+begin
+  Mouse.Wind := 0;
+  Mouse.Gravity := 20;
+  Mouse.Speed := 150;
+  Mouse.CanIdle := False;
+  Mouse.MissChance := 0;
+  if not RSClient.IsLoggedIn then
+    Login.LoginPlayer;
+  repeat
+    for i := 0 to High(Keys) do
+    begin
+      if System.IsKeyDown(Keys[i]) and not KeyPressed[i] then
+      begin
+        if not Disable then
+        begin
+          case Keys[i] of
+            112: TogglePrayer([ERSPrayer.PROTECT_FROM_MAGIC]);
+            113: TogglePrayer([ERSPrayer.PROTECT_FROM_MISSILES]);
+            114: TogglePrayer([ERSPrayer.PROTECT_FROM_MELEE]);
+            115:
+              begin
+                Mouse.Speed := 150;
+                MousePos1 := Mouse.Position;
+                Inventory.Open();
+                EquipGear(Gear1);
+                Wait(10);
+                TogglePrayer([BuffPrayer1]);
+                Mouse.Move(MousePos1, 1, True);
+                Mouse.Speed := 150;
+                Mouse.Move(MousePos1, 1, True);
+              end;
+            116:
+              begin
+                Mouse.Speed := 150;
+                MousePos1 := Mouse.Position;
+                Inventory.Open();
+                EquipGear(Gear2);
+                Wait(10);
+                TogglePrayer([BuffPrayer2]);
+                Mouse.Move(MousePos1, 1, True);
+                Mouse.Speed := 150;
+                Mouse.Move(MousePos1, 1, True);
+              end;
+            117:
+              begin
+                Mouse.Speed := 150;
+                MousePos1 := Mouse.Position;
+                Inventory.Open();
+                EquipGear(Gear3);
+                Wait(10);
+                TogglePrayer([BuffPrayer3]);
+                Mouse.Move(MousePos1, 1, True);
+                Mouse.Speed := 150;
+                Mouse.Move(MousePos1, 1, True);
+              end;
+            118:
+              begin
+                MousePos1 := Mouse.Position;
+                Inventory.Consume(ERSConsumable.PRAYER, Slots);
+                Mouse.Move(MousePos1, 1, True);
+              end;
+            119: EatFood(Food);
+            120:
+              begin
+                MousePos1 := Mouse.Position;
+                if Inventory.ContainsConsumable(ERSConsumable.BOOST) then
+                begin
+                  Inventory.Consume(ERSConsumable.BOOST);
+                  wait(1800);
+                end;
+                if Inventory.ContainsConsumable(ERSConsumable.MAGIC_BOOST) then
+                begin
+                  Inventory.Consume(ERSConsumable.MAGIC_BOOST);
+                  wait(1800);
+                end;
+                if Inventory.ContainsConsumable(ERSConsumable.ATTACK_BOOST) then
+                begin
+                  Inventory.Consume(ERSConsumable.ATTACK_BOOST);
+                  wait(1800);
+                end;
+                if Inventory.ContainsConsumable(ERSConsumable.RANGING_BOOST) then
+                begin
+                  Inventory.Consume(ERSConsumable.RANGING_BOOST);
+                  wait(1800);
+                end;
+                if Inventory.ContainsConsumable(ERSConsumable.DEFENCE_BOOST) then
+                begin
+                  Inventory.Consume(ERSConsumable.DEFENCE_BOOST);
+                  wait(1800);
+                end;
+                if Inventory.ContainsConsumable(ERSConsumable.STRENGTH_BOOST) then
+                begin
+                  Inventory.Consume(ERSConsumable.STRENGTH_BOOST);
+                  wait(1800);
+                end;
+              end;
+            121:
+              begin
+                MousePos1 := Mouse.Position;
+                magic.CastSpell(Thrall);
+                Mouse.Move(MousePos1, 1, True);
+              end;
+            122:
+              begin
+                MousePos1 := Mouse.Position;
+                Minimap.EnablePrayer();
+                Wait(50, 100);
+                Minimap.DisablePrayer();
+                Mouse.Move(MousePos1, 1, True);
+              end;
+          end;
+        end;
+        if Keys[i] = 123 then
+          ToggleDisable();
+        Writeln(IntToStr(Keys[i]), ' pressed');
+        KeyPressed[i] := True;
+      end
+      else if not System.IsKeyDown(Keys[i]) then
+        KeyPressed[i] := False;
+    end;
+  until False;
+end.
