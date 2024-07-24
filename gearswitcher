@@ -8,7 +8,7 @@ begin
 end;
 
 const
-  Food = 'Dark crab';
+  Food = 'Shark';
   BuffPrayer2 = ERSPrayer.PIETY;
   BuffPrayer1 = ERSPrayer.RIGOUR;
   Thrall = ERSSpell.NPC_CONTACT;
@@ -139,22 +139,30 @@ begin
 
   for i := 0 to High(Gear) do
   begin
+    writeln(gear[i]);
+    writeln(Inventory.ContainsItem(Gear[i]));
     itemIDs := ItemFinder.GetItemIDs(Gear[i]);
     for x := 0 to High(itemIDs) do
+    begin
+      writeln(inventory.ContainsItem(itemIDs[x]));
       if Inventory.MouseItem(itemIDs[x]) then
         Mouse.Click(MOUSE_LEFT);
-
-    Wait(10);
+    end;
+    Wait(50);
+    writeln(Inventory.ContainsItem(Gear[i]));
 
     if Inventory.ContainsItem(Gear[i]) then
     begin
+      writeln('finditem');
       Inventory.FindItem(Gear[i], slots11);
       Wait(100);
 
       if Inventory.ContainsItem(Gear[i]) then
-        for x := 0 to High(itemIDs) do
-          if Inventory.MouseItem(itemIDs[x]) then
-            Mouse.Click(MOUSE_LEFT);
+      begin
+        Inventory.MouseItem(slots11[0]);
+        Mouse.Click(MOUSE_LEFT);
+        waituntil(not(Inventory.ContainsItem(Gear[i])), 100, 1000);
+      end;
     end;
   end;
 end;
@@ -227,7 +235,7 @@ begin
               end;
             119:
               begin
-                Mouse.Speed := 230;
+                Mouse.Speed := 150;
                 MousePos1 := Mouse.Position;
                 if EquipGear1 then
                 begin
