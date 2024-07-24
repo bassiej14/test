@@ -24,6 +24,49 @@ var
   Disable, SwitchBuffPrayer, EquipGear1: Boolean;
   Slots: TIntegerArray;
   MousePos1: TPoint;
+{$I SRL-T/osr.simba}
+{$I WaspLib/osr.simba}
+
+
+function GetEquipmentItems(): array of string;
+var
+  EquipmentItems: array of string;
+  SLOTS: TBoxArray;
+  slot: tbox;
+  UniqueItem: TRSItem;
+  RetrySlot: Boolean;
+  StackCount, ItemCount: Int32;
+begin
+  SLOTS := equipment.GetSlotBoxes();
+  equipment.Open();
+  SetLength(EquipmentItems, 0);
+  for slot in SLOTS do
+  begin
+    if (equipment.IsSlotUsed(slot)) then
+    begin
+      RetrySlot := True;
+      while RetrySlot do
+      begin
+        mouse.Move(slot, true);
+        Wait(100);
+        UniqueItem :=  MainScreen.GetUpText.After(' ').Before(' /');
+        if (UniqueItem <> '') and (ItemFinder.GetItemIDs(UniqueItem) <> []) then
+        begin
+          SetLength(EquipmentItems, Length(EquipmentItems) + 1);
+          EquipmentItems[High(EquipmentItems)] := '"' +UniqueItem + '"';
+          RetrySlot := False;
+        end
+        else
+        begin
+          Wait(500);
+          antiban.RandomRotate();
+          Continue;
+        end;
+      end;
+    end;
+  end;
+  Result := EquipmentItems;
+end;
 
 function TRSInventory.Consume(consumableType: ERSConsumable; out Slots: TIntegerArray): Boolean; override;
 var
@@ -154,6 +197,8 @@ begin
   Mouse.MissChance := 0;
   if not RSClient.IsLoggedIn then
     Login.LoginPlayer;
+
+  writeln(GetEquipmentItems());
   repeat
     for i := 0 to High(Keys) do
     begin
