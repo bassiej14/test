@@ -149,7 +149,7 @@ end;
 begin
   Mouse.Wind := 0;
   Mouse.Gravity := 20;
-  Mouse.Speed := 150;
+  Mouse.Speed := 200;
   Mouse.CanIdle := False;
   Mouse.MissChance := 0;
   if not RSClient.IsLoggedIn then
@@ -167,33 +167,33 @@ begin
             114: TogglePrayer([ERSPrayer.PROTECT_FROM_MELEE]);
             115:
               begin
-                mouse.Speed := 200;
+
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear1);
                 TogglePrayer([BuffPrayer1]);
                 Mouse.Move(MousePos1, 1, True);
-                mouse.Speed := 150;
+
               end;
             116:
               begin
-                mouse.Speed := 200;
+
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear2);
                 TogglePrayer([BuffPrayer2]);
                 Mouse.Move(MousePos1, 1, True);
-                mouse.Speed := 150;
+
               end;
             117:
               begin
-                mouse.Speed := 200;
+
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear3);
                 TogglePrayer([BuffPrayer3]);
                 Mouse.Move(MousePos1, 1, True);
-                mouse.Speed := 150;
+
               end;
             118:
               begin
