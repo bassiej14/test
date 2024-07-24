@@ -13,8 +13,8 @@ const
   BuffPrayer1 = ERSPrayer.PIETY;
   BuffPrayer2 = ERSPrayer.RIGOUR;
   BuffPrayer3 = ERSPrayer.AUGURY;
-  Gear1 = ['Ancient d' 'hide boots', 'Archers ring (i)', 'ava' 's assembler', 'Necklace of anguish', 'Masori chaps (f)', 'Masori body (f)', 'Toxic blowpipe'];
-  Gear2 = ['Dragon boots', 'Emberlight', 'Bandos tassets', 'Bandos chestplate', 'Fire cape (l)', 'Amulet of torture', 'Dragon defender', 'Neitiznot faceguard', 'Berserker ring (i)'];
+  Gear2 = ['Ancient d' 'hide boots', 'Toxic blowpipe', 'Masori chaps (f)', 'Masori body (f)','ava' 's assembler', 'Necklace of anguish', 'Archers ring (i)'];
+  Gear1 = ['Dragon boots', 'Ghrazi rapier', 'Bandos tassets', 'Bandos chestplate', 'Fire cape (l)', 'Amulet of torture', 'Dragon defender', 'Neitiznot faceguard', 'Berserker ring (i)'];
   Gear3 = ['Ancient d' 'hide boots', 'Archers ring (i)', 'ava' 's assembler', 'Necklace of anguish', 'Masori chaps (f)', 'Masori body (f)', 'Toxic blowpipe'];
 
 var
@@ -129,30 +129,18 @@ var
   slots11: TIntegerArray;
   tempgear: array of String;
 begin
-  tempgear := ShuffleArray(Gear);
+  //tempgear := ShuffleArray(Gear);
   for i := 0 to High(Gear) do
   begin
-    writeln(gear[i]);
-    writeln(Inventory.ContainsItem(Gear[i]));
-    itemIDs := ItemFinder.GetItemIDs(Gear[i]);
-    for x := 0 to High(itemIDs) do
-    begin
-      writeln(inventory.ContainsItem(itemIDs[x]));
-      if Inventory.MouseItem(itemIDs[x]) then
-        Mouse.Click(MOUSE_LEFT);
-    end;
-    Wait(50);
-    writeln(Inventory.ContainsItem(Gear[i]));
     if Inventory.ContainsItem(Gear[i]) then
     begin
       writeln('finditem');
-      Inventory.FindItem(Gear[i], slots11);
-      Wait(100);
       if Inventory.ContainsItem(Gear[i]) then
       begin
-        Inventory.MouseItem(slots11[0]);
+        Inventory.FindItem(Gear[i], slots11);
+        Inventory.MouseSlot(slots11[0]);
         Mouse.Click(MOUSE_LEFT);
-        waituntil(not (Inventory.ContainsItem(Gear[i])), 100, 1000);
+        waituntil(not (Inventory.ContainsItem(Gear[i])), 1, 100);
       end;
     end;
   end;
@@ -179,30 +167,33 @@ begin
             114: TogglePrayer([ERSPrayer.PROTECT_FROM_MELEE]);
             115:
               begin
+                mouse.Speed := 300;
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear1);
-                TogglePrayer([BuffPrayer1]);
+                //TogglePrayer([BuffPrayer1]);
                 Mouse.Move(MousePos1, 1, True);
-                Mouse.Move(MousePos1, 1, True);
+                mouse.Speed := 150;
               end;
             116:
               begin
+                mouse.Speed := 300;
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear2);
-                TogglePrayer([BuffPrayer2]);
+                //TogglePrayer([BuffPrayer2]);
                 Mouse.Move(MousePos1, 1, True);
-                Mouse.Move(MousePos1, 1, True);
+                mouse.Speed := 150;
               end;
             117:
               begin
+                mouse.Speed := 250;
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear3);
-                TogglePrayer([BuffPrayer3]);
+                //TogglePrayer([BuffPrayer3]);
                 Mouse.Move(MousePos1, 1, True);
-                Mouse.Move(MousePos1, 1, True);
+                mouse.Speed := 150;
               end;
             118:
               begin
