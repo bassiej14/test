@@ -76,13 +76,13 @@ begin
     begin
       prayer.Open();
       if not prayer.IsOpen() then
-        wait(1000);
+        wait(100);
     end;
   end;
   for i := 0 to High(Prayers) do
     if not Prayer.IsPrayerActive(Prayers[i]) then
       Mouse.Click(Prayer.GetPrayerBox(Prayers[i]), MOUSE_LEFT);
-  WaitUntil(Prayer.AllPrayerActive(Prayers), 100, 2000);
+  WaitUntil(Prayer.AllPrayerActive(Prayers), 10, 200);
   Mouse.Move(MousePos, 1, True);
 end;
 
@@ -179,47 +179,43 @@ begin
             114: TogglePrayer([ERSPrayer.PROTECT_FROM_MELEE]);
             115:
               begin
-                Mouse.Speed := 150;
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear1);
-                Wait(10);
                 TogglePrayer([BuffPrayer1]);
                 Mouse.Move(MousePos1, 1, True);
-                Mouse.Speed := 150;
                 Mouse.Move(MousePos1, 1, True);
               end;
             116:
               begin
-                Mouse.Speed := 150;
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear2);
-                Wait(10);
                 TogglePrayer([BuffPrayer2]);
                 Mouse.Move(MousePos1, 1, True);
-                Mouse.Speed := 150;
                 Mouse.Move(MousePos1, 1, True);
               end;
             117:
               begin
-                Mouse.Speed := 150;
                 MousePos1 := Mouse.Position;
                 Inventory.Open();
                 EquipGear(Gear3);
-                Wait(10);
                 TogglePrayer([BuffPrayer3]);
                 Mouse.Move(MousePos1, 1, True);
-                Mouse.Speed := 150;
                 Mouse.Move(MousePos1, 1, True);
               end;
             118:
               begin
                 MousePos1 := Mouse.Position;
                 Inventory.Consume(ERSConsumable.PRAYER, Slots);
+                Wait(50, 100);
                 Mouse.Move(MousePos1, 1, True);
               end;
-            119: EatFood(Food);
+            119:
+              begin
+                EatFood(Food);
+                Wait(50, 100);
+              end;
             120:
               begin
                 MousePos1 := Mouse.Position;
