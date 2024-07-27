@@ -24,8 +24,6 @@ var
   Disable, SwitchBuffPrayer, EquipGear1: Boolean;
   Slots: TIntegerArray;
   MousePos1: TPoint;
-{$I SRL-T/osr.simba}
-{$I WaspLib/osr.simba}
 
 
 function GetEquipmentItems(): array of string;
