@@ -193,8 +193,6 @@ begin
   Mouse.Speed := 200;
   Mouse.CanIdle := False;
   Mouse.MissChance := 0;
-  if not RSClient.IsLoggedIn then
-    Login.LoginPlayer;
 
   writeln(GetEquipmentItems());
   repeat
